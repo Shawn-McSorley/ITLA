@@ -6,7 +6,7 @@ Communication is done using RS-232 interface through a micro-usb but can be modi
 '''
 
 
-import serial
+
 import time
 import struct
 import os
@@ -14,6 +14,7 @@ import os.path
 import sys
 import threading
 from globals import *
+import serial
 
 class ITLA:
     def __init__(self,port,baudrate=9600,verbose=True):
@@ -45,10 +46,8 @@ class ITLA:
             Errors if present
         '''
         reftime=time.process_time()
-        try:
-            self.conn = serial.Serial(port,baudrate, timeout=1)
-        except serial.SerialException:
-            return(ITLA_ERROR_SERPORT)
+        self.conn = serial.Serial(port,baudrate, timeout=1)
+
         baudrate2=4800
         while baudrate2<115200:
             self.ITLA(REG_Nop,0,0)
@@ -383,6 +382,18 @@ class ITLA:
         register = REG_Opsh
         return self.ITLA(register,0,READ)
 
+    def cleanMode(self, mode :int):
+        '''
+        Function:
+            Change between dither mode and whisper mode.
+        Inputs:
+            Mode: 0 = Dither, 1 or 2 = Whisper'''
+        register = REG_Mode
+        if mode in [MODE_Standard, MODE_Nodither, MODE_Whisper]:
+            self.ITLA(register,mode,WRITE)
+            return
+        raise RuntimeError('Invalid choice for mode: %s' % mode)
+    
     def get_min_power(self) -> int:
         '''
         Function:
@@ -416,25 +427,31 @@ class ITLA:
 
 
 if __name__ == '__main__':
-    laser = ITLA('com5',verbose=True)
+    laser = ITLA('/dev/ttyUSB0',verbose=True)
     print('CONNECTED')
 
+    laser.cleanMode(1)
+    print('CLEAN MODE SET')
+    exit()
+    
     print(f'TEMPERATURE: {laser.get_temperature()}')
 
     print('SETTING POWER')
-    laser.set_power_dBm(10)
+    laser.set_power_dBm(13.5)
 
-    print('SETTING FREQUENCY')
-    laser.set_wavelength_nm(1535)
+    # print('SETTING FREQUENCY')
+    # laser.set_wavelength_nm(1550)
 
     print('TURNING ON')
     laser.turn_on()
 
-    time.sleep(5)
-
+    input('Press enter to turn off')
+    
     print('TURNING OFF')
     laser.turn_off()
 
+    exit()
+    
     print('SETTING POWER')
     laser.set_power_dBm(8)
 
