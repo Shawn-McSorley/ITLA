@@ -430,7 +430,7 @@ if __name__ == '__main__':
     laser = ITLA('/dev/ttyUSB0',verbose=True)
     print('CONNECTED')
 
-    laser.cleanMode(1)
+    laser.cleanMode(2)
     print('CLEAN MODE SET')
     exit()
     
